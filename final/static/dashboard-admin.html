@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    .btn {
+      margin: 10px;
+    }
+    #qr-container img {
+      max-width: 200px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container text-center">
+  <h2 class="mb-4">Bienvenido al Dashboard del Administrador</h2>
+  <p>Desde aquí puedes gestionar el sistema de inventario.</p>
+
+  <div class="mb-4">
+    <!-- Funciones compartidas -->
+    <a href="/static/buscar-productos.html" class="btn btn-primary">Buscar Productos</a>
+    <a href="/static/productos.html" class="btn btn-success">Ver Productos</a>
+    <a href="/static/agregar-venta.html" class="btn btn-warning">Registrar Venta</a>
+
+    <!-- Funciones exclusivas de admin -->
+    <a href="/static/agregar-producto.html" class="btn btn-info">Agregar Producto</a>
+    <a href="/static/actualizar-producto.html" class="btn btn-outline-secondary">Actualizar Producto</a>
+    <a href="/static/eliminar-producto.html" class="btn btn-outline-danger">Eliminar Producto</a>
+
+    <!-- Reportes -->
+    <button class="btn btn-dark" onclick="descargarPDF()">Exportar Inventario PDF</button>
+    <button class="btn btn-outline-primary" onclick="descargarExcel()">Exportar Inventario Excel</button>
+    <a href="/static/reportes.html" class="btn btn-secondary">Resumen de Inventario</a>
+
+    <!-- NUEVAS FUNCIONALIDADES -->
+    <button class="btn btn-outline-success" onclick="activar2FA()">Activar 2FA</button>
+    <button class="btn btn-outline-warning" onclick="verAlertasStock()">Ver Alertas de Bajo Stock</button>
+  </div>
+
+  <div id="qr-container" class="mb-3"></div>
+  <div id="alerta-container" class="alert alert-info d-none"></div>
+
+  <button class="btn btn-danger" id="logout">Cerrar sesión</button>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  if (role !== 'admin' || !token) {
+    window.location.href = "/static/login.html";
+  }
+
+  document.getElementById('logout').addEventListener('click', function () {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.href = "/static/login.html";
+  });
+
+  function descargarPDF() {
+    fetch('http://127.0.0.1:5000/reportes/inventario/pdf', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'inventario.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(err => alert("Error al exportar PDF"));
+  }
+
+  function descargarExcel() {
+    fetch('http://127.0.0.1:5000/reportes/inventario/excel', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'inventario.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(err => alert("Error al exportar Excel"));
+  }
+
+  function activar2FA() {
+    fetch("http://127.0.0.1:5000/activar_2fa", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const qrContainer = document.getElementById("qr-container");
+      qrContainer.innerHTML = `<p>Escanea este código con Google Authenticator:</p><img src="http://127.0.0.1:5000/${data.qr_image}" alt="QR 2FA">`;
+    })
+    .catch(err => alert("Error al activar 2FA"));
+  }
+
+  function verAlertasStock() {
+    fetch("http://127.0.0.1:5000/alerta/stock", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const alertaContainer = document.getElementById("alerta-container");
+      alertaContainer.classList.remove("d-none");
+      alertaContainer.textContent = data.message;
+    })
+    .catch(err => alert("Error al consultar alerta de stock"));
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+ 

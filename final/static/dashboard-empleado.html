@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Empleado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .btn {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h2 class="mb-4">Bienvenido al Dashboard del Empleado</h2>
+        <p>Desde aquí puedes gestionar el sistema de inventario.</p>
+    
+        <div class="mb-4">
+          <a href="/static/buscar-productos.html" class="btn btn-primary">Buscar Productos</a>
+          <a href="/static/productos.html">Ver Productos</a>
+          <a href="/static/agregar-venta.html" class="btn btn-warning">Registrar Venta</a>
+        </div>
+
+    <div class="text-center mt-4">
+        <button class="btn btn-danger" id="logout">Cerrar sesión</button>
+    </div>
+
+    <script>
+        const role = localStorage.getItem('role');
+        const token = localStorage.getItem('token');
+
+        if (role !== 'empleado' || !token) {
+            window.location.href = "static/login.html"; // Redirige al login si no es empleado
+        }
+
+        function redirigir(ruta) {
+            window.location.href = ruta;
+        }
+
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.href = "/static/login.html";
+        });
+    </script>
+</body>
+</html>
