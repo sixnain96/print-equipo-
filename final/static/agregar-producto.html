@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agregar Producto</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="text-center mb-4">Agregar Nuevo Producto</h2>
+  <form id="productoForm">
+    <div class="mb-3">
+      <label for="nombre" class="form-label">Nombre</label>
+      <input type="text" class="form-control" id="nombre" required>
+    </div>
+    <div class="mb-3">
+      <label for="categoria" class="form-label">Categoría</label>
+      <input type="text" class="form-control" id="categoria" required>
+    </div>
+    <div class="mb-3">
+      <label for="codigo_sku" class="form-label">Código SKU</label>
+      <input type="text" class="form-control" id="codigo_sku" required>
+    </div>
+    <div class="mb-3">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <textarea class="form-control" id="descripcion"></textarea>
+    </div>
+    <div class="mb-3">
+      <label for="precio_venta" class="form-label">Precio de Venta</label>
+      <input type="number" step="0.01" class="form-control" id="precio_venta" required>
+    </div>
+    <div class="mb-3">
+      <label for="precio_compra" class="form-label">Precio de Compra</label>
+      <input type="number" step="0.01" class="form-control" id="precio_compra">
+    </div>
+    <div class="mb-3">
+      <label for="stock_actual" class="form-label">Stock Inicial</label>
+      <input type="number" class="form-control" id="stock_actual" required>
+    </div>
+    <div class="mb-3">
+      <label for="proveedor" class="form-label">Proveedor</label>
+      <input type="text" class="form-control" id="proveedor">
+    </div>
+    <div class="mb-3">
+      <label for="ubicacion" class="form-label">Ubicación en Almacén</label>
+      <input type="text" class="form-control" id="ubicacion">
+    </div>
+    <div class="mb-3">
+      <label for="cantidad_minima" class="form-label">Cantidad Mínima</label>
+      <input type="number" class="form-control" id="cantidad_minima" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Agregar Producto</button>
+  </form>
+
+  <div id="successMessage" class="alert alert-success mt-3 d-none">
+    Producto agregado correctamente.
+  </div>
+  <div id="errorMessage" class="alert alert-danger mt-3 d-none">
+    Error al agregar producto. Revisa los datos o permisos.
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  if (role !== 'admin' || !token) {
+    window.location.href = "login.html";
+  }
+
+  document.getElementById('productoForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const data = {
+      nombre: document.getElementById('nombre').value,
+      categoria: document.getElementById('categoria').value,
+      codigo_sku: document.getElementById('codigo_sku').value,
+      descripcion: document.getElementById('descripcion').value,
+      precio_venta: parseFloat(document.getElementById('precio_venta').value),
+      precio_compra: parseFloat(document.getElementById('precio_compra').value) || 0,
+      stock_actual: parseInt(document.getElementById('stock_actual').value),
+      proveedor: document.getElementById('proveedor').value,
+      ubicacion_almacen: document.getElementById('ubicacion').value,
+      cantidad_minima: parseInt(document.getElementById('cantidad_minima').value)
+    };
+
+    fetch('http://127.0.0.1:5000/producto', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(data)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Error en el servidor");
+      return res.json();
+    })
+    .then(response => {
+      document.getElementById('successMessage').classList.remove('d-none');
+      document.getElementById('errorMessage').classList.add('d-none');
+      document.getElementById('productoForm').reset();
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('errorMessage').classList.remove('d-none');
+      document.getElementById('successMessage').classList.add('d-none');
+    });
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

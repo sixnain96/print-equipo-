@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes de Inventario</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    .table th {
+      background-color: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2 class="text-center mb-4">Reportes de Inventario</h2>
+
+  <div class="mb-3 text-center">
+    <button class="btn btn-success me-2" onclick="exportarExcel()">Exportar a Excel</button>
+    <button class="btn btn-danger" onclick="exportarPDF()">Exportar a PDF</button>
+  </div>
+
+  <div id="reporte" class="mt-4">
+    <p><strong>Total de productos:</strong> <span id="total"></span></p>
+    <p><strong>Promedio de stock por categoría:</strong></p>
+    <ul id="promedioStock"></ul>
+    <p><strong>Productos con menos stock:</strong></p>
+    <ul id="menosStock"></ul>
+  </div>
+
+  <div class="alert alert-warning d-none" id="mensajeError">
+    No se pudo cargar el reporte. Verifica tu sesión.
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  if (!token || role !== 'admin') {
+    alert("Sesión inválida o sin permisos. Redirigiendo al login.");
+    window.location.href = "/static/login.html";
+  }
+
+  fetch('http://127.0.0.1:5000/reportes/inventario', {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  })
+  .then(res => {
+    if (!res.ok) throw new Error("Fallo de autenticación");
+    return res.json();
+  })
+  .then(data => {
+    document.getElementById('total').textContent = data.total_productos;
+
+    const listaPromedio = document.getElementById('promedioStock');
+    data.promedio_stock_por_categoria.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item[0]}: ${Number(item[1]).toFixed(2)} unidades`;
+
+      listaPromedio.appendChild(li);
+    });
+
+    const listaMenos = document.getElementById('menosStock');
+    data.productos_con_menos_stock.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item[0]}: ${item[1]} unidades`;
+      listaMenos.appendChild(li);
+    });
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById('mensajeError').classList.remove('d-none');
+  });
+
+  function exportarPDF() {
+    fetch('http://127.0.0.1:5000/reportes/inventario/pdf', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("No se pudo exportar PDF");
+      return res.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'inventario.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(error => alert("Error al exportar PDF: " + error.message));
+  }
+
+  function exportarExcel() {
+    fetch('http://127.0.0.1:5000/reportes/inventario/excel', {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("No se pudo exportar Excel");
+      return res.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'inventario.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(error => alert("Error al exportar Excel: " + error.message));
+  }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

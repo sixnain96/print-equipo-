@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Productos - Ferretería</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Buscar Productos</h2>
+        <form id="search-form">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre del Producto</label>
+                <input type="text" class="form-control" id="nombre" placeholder="Nombre del producto">
+            </div>
+            <div class="mb-3">
+                <label for="categoria" class="form-label">Categoría</label>
+                <input type="text" class="form-control" id="categoria" placeholder="Categoría del producto">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+        </form>
+
+        <h3 class="mt-4">Resultados de búsqueda</h3>
+        <table class="table table-bordered" id="resultados-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se llenarán los resultados de búsqueda -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById("search-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const nombre = document.getElementById("nombre").value;
+            const categoria = document.getElementById("categoria").value;
+            
+            fetch(`http://127.0.0.1:5000/productos/buscar?nombre=${nombre}&categoria=${categoria}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.querySelector("#resultados-table tbody");
+                tableBody.innerHTML = "";  // Limpiar resultados previos
+                data.forEach(producto => {
+                    let row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${producto.nombre}</td>
+                        <td>${producto.categoria}</td>
+                        <td>${producto.stock_actual}</td>
+                        <td>${producto.precio_venta}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error al buscar productos:', error));
+        });
+    </script>
+</body>
+</html>

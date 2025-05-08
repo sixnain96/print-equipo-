@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ferretería</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+        }
+        .login-container {
+            margin-top: 10%;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container d-flex justify-content-center">
+    <div class="login-container">
+        <h2 class="text-center mb-4">Login - Ferretería</h2>
+
+        <!-- Formulario de login -->
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Nombre de Usuario</label>
+                <input type="text" class="form-control" id="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="otp" class="form-label">Código OTP (si tienes 2FA activado)</label>
+                <input type="text" class="form-control" id="otp">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+        </form>
+
+        <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
+            Error: Usuario o contraseña incorrectos.
+        </div>
+
+        <div id="otpMessage" class="alert alert-warning mt-3 d-none" role="alert">
+            Se requiere un código OTP. 
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById("loginForm").addEventListener("submit", function(event) {
+        event.preventDefault();  // Evita que el formulario se envíe por defecto
+
+        // Obtener los valores del formulario
+        let username = document.getElementById("username").value;
+        let password = document.getElementById("password").value;
+        let otp = document.getElementById("otp").value;  // OTP (si tiene 2FA activado)
+
+        // Ocultar mensajes de error previos
+        document.getElementById("errorMessage").classList.add("d-none");
+        document.getElementById("otpMessage").classList.add("d-none");
+
+        // Crear el objeto con los datos del formulario
+        let loginData = {
+            username: username,
+            password: password,
+            otp: otp || null  // Si no hay OTP, se envía como null
+        };
+
+        // Hacer la solicitud POST al backend para verificar el login
+        fetch("http://127.0.0.1:5000/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(loginData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Almacenar el token y el rol
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('role', data.role);  // Almacenar el rol
+            console.log("El token de acceso es:", localStorage.getItem('token'));
+            console.log("El rol de acceso es:", localStorage.getItem('role'));
+
+            // Redirigir según el rol
+            if (data.role === 'admin') {
+                window.location.href = "/dashboard/admin";  // Redirigir al dashboard admin
+            } 
+            else if (data.role === 'empleado') {
+                window.location.href = "/dashboard/empleado";  // Redirigir al dashboard empleado
+            }
+        })
+        .catch(error => {
+            // Manejar errores generales (por ejemplo, si el servidor no responde)
+            console.error("Error al autenticar:", error);
+            document.getElementById("errorMessage").classList.remove("d-none");
+        });
+    });
+</script>
+
+</body>
+</html>
